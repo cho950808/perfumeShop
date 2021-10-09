@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="adminMapper">
+    
+    <!-- 회원정보 -->
+	<select id="memberList" resultType="com.perfume.vo.MemberVO">
+		SELECT MNUM, MUSERID, MUSERNAME, MUSERPHON, MREGDATE, MUSEREMAIL
+		 FROM ( 
+		        SELECT MNUM, MUSERID, MUSERNAME, MUSERPHON, MREGDATE, MUSEREMAIL,
+		               ROW_NUMBER() OVER(ORDER BY MNUM DESC) AS RNUM
+		         FROM MEMBER
+		         WHERE 1=1
+		         <include refid="memberSearch"></include>
+		                       ) MP
+		WHERE RNUM BETWEEN #{rowStart} AND #{rowEnd}
+		ORDER BY MNUM DESC
+	</select>
+	
+	<!-- 회원 총 인원 수 -->
+	<select id="memberListCount" resultType="int">
+ 		SELECT COUNT(MNUM)
+		   FROM MEMBER
+		   WHERE 1=1
+		   <include refid="memberSearch"></include>
+		   AND MNUM > 0
+	</select>
+	
+	<!-- 회원 목록 삭제 -->
+	<delete id="memberDelete">
+ 	DELETE
+  		FROM MEMBER
+ 	WHERE MUSERID = #{mUserId}
+	</delete>
+    
+	<!-- 카테고리 호출 -->
+	<select id="category" resultType="com.perfume.vo.CategoryVO">
+		SELECT
+			LEVEL, PCATENAME, PCATECODE, PCATECODEREF
+		FROM PRODUCT_CATEGORY
+	    	START WITH PCATECODEREF IS NULL CONNECT BY PRIOR PCATECODE = PCATECODEREF
+	</select>
+
+	<!-- 상품 등록 -->
+	<insert id="register">
+		INSERT INTO PRODUCT (PNUM, PNAME, PCATECODE, PPRICE, PSTOCK, PDETAIL, 
+								PIMG, PTHUMBIMG)
+	   		VALUES (PRODUCT_SEQ.NEXTVAL, #{pName}, #{pCateCode}, #{pPrice}, #{pStock}, #{pDetail},
+	   		 		#{pImg}, #{pThumbImg})
+	</insert>
+ 
+	<!-- 상품 목록 (페이징)-->
+	<select id="productList" parameterType="com.perfume.vo.SearchVO" resultType="com.perfume.vo.ProductViewVO">
+			SELECT * FROM (SELECT ROWNUM PN, P.*
+				FROM (
+            SELECT * FROM PRODUCT P
+            	INNER JOIN PRODUCT_CATEGORY C ON P.PCATECODE = C.PCATECODE 
+		         <include refid="productSearch"></include>
+            		ORDER BY PNUM DESC)P)
+				WHERE PN BETWEEN #{rowStart} and #{rowEnd}		
+	</select>
+	
+	<!-- 상품 목록 총 갯수 -->
+	<select id="listCount" resultType="int">
+ 		SELECT COUNT(PNUM) FROM PRODUCT
+	</select>
+	
+	<!-- 상품 조회 + 카테고리 조인-->
+	<select id="productView" resultType="com.perfume.vo.ProductViewVO">
+		SELECT
+		    P.PNUM, P.PNAME, P.PCATECODE, C.PCATECODEREF, C.PCATENAME, PPRICE, PSTOCK, PDETAIL, PIMG, PDATE,
+		    P.PIMG, P.PTHUMBIMG
+		        FROM PRODUCT P
+		            INNER JOIN PRODUCT_CATEGORY C
+		                ON P.PCATECODE = C.PCATECODE            
+	          		WHERE P.PNUM = #{pNum}
+	</select>
+	
+	<!-- 상품 수정 -->
+	<update id="productModify">
+		UPDATE PRODUCT
+		    SET
+		        PNAME = #{pName},
+		        PCATECODE = #{pCateCode},
+		        PPRICE = #{pPrice}, 
+		        PSTOCK = #{pStock},
+		        PDETAIL = #{pDetail},
+		        PIMG = #{pImg},
+		        PTHUMBIMG = #{pThumbImg}
+		     
+		    WHERE PNUM = ${pNum}
+	</update>
+	
+	<!-- 상품 삭제 -->
+	<delete id="productDelete">
+		DELETE
+	   		PRODUCT
+		WHERE PNUM = #{pNum}
+	</delete>
+	
+	<!-- 주문 목록 -->
+	<select id="orderList" resultType="com.perfume.vo.OrderVO">
+		SELECT ORDERID, MUSERID, ORDERREC, USERADDR1, USERADDR2, USERADDR3, ORDERPHON, AMOUNT, ORDERDATE, DELIVERY
+		 FROM ( 
+		        SELECT ORDERID, MUSERID, ORDERREC, USERADDR1, USERADDR2, USERADDR3, ORDERPHON, AMOUNT, ORDERDATE, DELIVERY,
+		               ROW_NUMBER() OVER(ORDER BY ORDERID DESC) AS RNUM
+		         FROM PRODUCT_ORDER
+		                       ) MP
+		WHERE RNUM BETWEEN #{rowStart} AND #{rowEnd}
+		ORDER BY ORDERID DESC
+	</select>
+	
+	<!-- 주문 목록 총 갯수 -->
+	<select id="orderListCount" resultType="int">
+ 		SELECT COUNT(ORDERDATE) FROM PRODUCT_ORDER
+	</select>
+	
+	
+	<!-- 특정 주문 목록 -->
+	<select id="orderView" resultType="com.perfume.vo.OrderListVO">
+		SELECT 
+		    O.ORDERID, O.MUSERID, O.ORDERREC,
+		    O.USERADDR1, O.USERADDR2, O.USERADDR3,
+		    O.ORDERPHON, O.AMOUNT, O.ORDERDATE, O.DELIVERY,
+		    D.ORDERDETAILSNUM, D.PNUM, D.CARTSTOCK,
+		    P.PNAME, P.PTHUMBIMG, P.PPRICE
+		FROM PRODUCT_ORDER O
+		        INNER JOIN ORDER_DETAILS D
+		            ON O.ORDERID = D.ORDERID
+		        INNER JOIN PRODUCT P
+		            ON D.PNUM = P.PNUM
+		    WHERE O.ORDERID = #{orderId}
+	</select>
+	
+	<!-- 배송 상태 -->
+	<update id="delivery">
+		UPDATE PRODUCT_ORDER
+	   		SET DELIVERY = #{delivery}
+		WHERE ORDERID = #{orderId}
+	</update>
+	
+	<!-- 상품 수량 조절 -->
+	<update id="changeStock">
+		UPDATE PRODUCT
+	   		SET PSTOCK = PSTOCK - #{pStock}
+		WHERE PNUM = #{pNum}
+	</update>
+	
+	<!-- 상품 수량 조절 보조 :: 사용하지 않음-->
+	<select id="ChangeStock_sub" resultType="com.perfume.vo.OrderDetailVO">
+		SELECT
+			ORDERID, PNUM, CARTSTOCK
+		FROM ORDER_DETAILS
+    		WHERE ORDERID = #{orderId}
+	</select>
+		 
+	<!--  모든 소감(댓글) -->
+	<select id="allReply" resultType="com.perfume.vo.ReplyListVO">
+		 SELECT * FROM (SELECT ROWNUM RN, R.*
+				FROM (
+            SELECT * FROM PRODUCT_REPLY R
+            	INNER JOIN MEMBER M ON R.MUSERID = M.MUSERID 
+            		ORDER BY PRDATE DESC)R)
+				WHERE RN BETWEEN #{rowStart} and #{rowEnd}
+	</select>
+	
+	 <!--  모든 상품(댓글) 갯수 --> 
+	<select id="allReplyCount" resultType="int">
+ 		SELECT COUNT(PRDATE) FROM PRODUCT_REPLY
+	</select>
+	
+	<!-- 소감(댓글) 지우기 -->
+	<delete id="deleteReply">
+		DELETE PRODUCT_REPLY
+	   		WHERE PRNUM = #{prNum}
+	</delete>
+		 
+	<!-- 문의 리스트 -->
+	<select id="list" resultType="com.perfume.vo.QnaViewVO">
+		SELECT
+			QNUM, MUSERNAME, QTITLE, QCON, QDATE
+		FROM QNA
+	</select>
+	
+	<!-- 유저 목록 검색 -->
+	<sql id="memberSearch">
+		<if test="searchType == 'id'.toString()">AND MUSERID LIKE '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'name'.toString()">AND MUSERNAME LIKE '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'email'.toString()">AND MUSEREMAIL LIKE '%' || #{keyword} || '%'</if>
+	</sql>
+	
+	<!-- 상품 목록 검색 -->
+	<sql id="productSearch">
+		<if test="searchType == 'n'.toString()">AND PNAME LIKE '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'c'.toString()">AND PCATENAME LIKE '%' || #{keyword} || '%'</if>
+	</sql>
+	
+
+		 
+</mapper>
+
+

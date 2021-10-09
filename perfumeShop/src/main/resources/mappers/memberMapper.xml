@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="memberMapper">
+
+	<!-- 회원 가입 -->
+	<insert id="signup">
+		INSERT INTO MEMBER(MNUM, MUSERID, MUSERPASS, MUSERNAME, MUSERPHON, MUSEREMAIL)
+		VALUES(MEMBER_SEQ.NEXTVAL, #{mUserId}, #{mUserPass}, #{mUserName}, #{mUserPhon}, #{mUserEmail})
+	</insert>
+
+	<!-- 로그인 -->
+	<select id="signin" resultType="com.perfume.vo.MemberVO">
+		SELECT *
+			FROM
+		MEMBER
+			WHERE MUSERID = #{mUserId}
+	</select>
+
+	<!-- 아이디 체크 -->
+	<select id="idChk" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
+		WHERE MUSERID = #{mUserId}
+	</select>
+
+	<!-- 패스워드 체크 -->
+	<select id="passChk" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
+		WHERE MUSERID = #{mUserId}
+		AND MUSERPASS = #{mUserPass}
+	</select>
+	
+	<!-- 마이페이지 정보수정 -->
+	<update id="memberUpdate">
+		UPDATE MEMBER SET
+		MUSERPHON = #{mUserPhon},
+		MUSEREMAIL = #{mUserEmail}
+		WHERE MUSERID = #{mUserId}
+	</update>
+
+	<!-- 비밀번호 변경 -->
+	<update id="PassUpdate" parameterType="com.perfume.vo.MemberVO">
+			UPDATE MEMBER SET
+		MUSERPASS = #{mUserPass}
+		WHERE MUSERID = #{mUserId}
+	</update>
+
+	<!-- 회원탈퇴 -->
+	<delete id="memberDelete">
+		DELETE FROM MEMBER
+		WHERE MUSERID = #{mUserId}
+	</delete>
+
+
+	<!-- 아이디 찾기 -->
+	<select id="memberFindId" resultType="com.perfume.vo.MemberVO"> 
+		SELECT MUSERID FROM MEMBER WHERE MUSEREMAIL = #{mUserEmail}
+	</select>
+	
+	<!-- 아이디 찾기 조회 -->
+	<select id="findIdCheck" resultType="int">
+		SELECT COUNT(*) FROM MEMBER WHERE MUSEREMAIL = #{mUserEmail}
+	</select>
+	
+		
+	<!-- 패스워드 찾기 -->
+	<update id="memberFindPw">
+		UPDATE MEMBER SET MUSERPASS = #{mUserPass} WHERE MUSEREMAIL = #{mUserEmail} AND MUSERID = #{mUserId}
+	</update>
+
+	<!-- 패스워드 찾기 조회 -->
+	<select id="findPwCheck" resultType="int">
+		SELECT COUNT(*) FROM MEMBER WHERE MUSEREMAIL = #{mUserEmail} AND MUSERID = #{mUserId}
+	</select>
+	
+
+</mapper>

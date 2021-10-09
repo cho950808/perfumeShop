@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="qnaMapper">
+   
+	<!-- 문의글 목록(페이징, 검색)-->
+	<select id="qnaList" resultType="com.perfume.vo.QnaViewVO" parameterType="com.perfume.vo.SearchVO">
+		SELECT QNUM, QTITLE, QCON, MUSERNAME, QDATE, RECNT
+		 FROM ( 
+		        SELECT QNUM, QTITLE, QCON, MUSERNAME, QDATE, RECNT, 
+		               ROW_NUMBER() OVER(ORDER BY QNUM DESC) AS RNUM
+		         FROM QNA
+		         WHERE 1=1
+		         <include refid="search"></include>
+		                       ) MP
+		WHERE RNUM BETWEEN #{rowStart} AND #{rowEnd}
+		ORDER BY QNUM DESC
+	</select>
+	
+	<!-- 문의 작성 -->
+	<insert id="write" parameterType="com.perfume.vo.QnaViewVO">
+ 	INSERT INTO
+  		QNA(QNUM, MUSERNAME, QTITLE, QCON, QDATE)
+	VALUES(QNA_SEQ.NEXTVAL, #{mUserName}, #{qTitle}, #{qCon}, SYSDATE)
+	</insert>
+	
+	<!-- 문의 상세 -->
+	<select id="detail" parameterType="int" resultType="com.perfume.vo.QnaViewVO">
+ 	SELECT 
+  		QNUM, MUSERNAME, QTITLE, QCON, QDATE, RECNT
+ 		FROM 
+ 			QNA
+ 		WHERE
+ 	QNUM = #{qNum}   
+	</select>
+	
+	<!-- 문의 삭제 -->
+	<delete id="delete">
+ 	DELETE
+  		FROM QNA
+ 	WHERE QNUM = #{qNum}
+	</delete>
+	
+	<!-- 답변 조회 -->
+	<select id="replyList" parameterType="int" resultType="com.perfume.vo.QnaReplyVO">
+	SELECT
+		QRNUM, QNUM, MUSERNAME, QRCON, QRDATE
+	FROM QNA_REPLY
+		WHERE QNUM = #{qNum}
+	ORDER BY QRNUM ASC
+	</select>
+
+	<!-- 답변 작성 -->
+	<insert id="replyWrite" parameterType="com.perfume.vo.QnaReplyVO">
+	INSERT INTO QNA_REPLY(QRNUM, QNUM, MUSERNAME, QRCON)
+		VALUES(QNA_REPLY_SEQ.NEXTVAL, #{qNum}, #{mUserName}, #{qrCon})
+	</insert>
+	
+	<!-- 답변 수정 -->
+	<update id="replyModify" parameterType="com.perfume.vo.QnaReplyVO">
+	UPDATE QNA_REPLY SET
+		MUSERNAME = #{mUserName},
+		QRCON = #{qrCon}
+	WHERE QRNUM = #{qrNum}
+		AND QNUM = #{qNum}	
+	</update>
+
+	<!-- 답변 삭제 -->
+	<delete id="replyDelete" parameterType="com.perfume.vo.QnaReplyVO">
+	DELETE FROM QNA_REPLY
+	WHERE QRNUM = #{qrNum}
+		AND QNUM = #{qNum}	
+	</delete>
+	
+	<!-- 문의글 총 갯수 -->
+	<select id="countSearch" resultType="int">
+ 		SELECT COUNT(QNUM)
+		   FROM QNA
+		   WHERE 1=1
+		   <include refid="search"></include>
+		  AND QNUM > 0
+	</select>
+	
+	
+	<!-- 댓글 개수 -->
+	<update id="replyCount">
+		UPDATE
+			QNA
+		SET
+			RECNT = (SELECT COUNT(QRNUM) FROM QNA_REPLY WHERE QNUM = #{qNum})
+		WHERE
+			QNUM = #{qNum}
+	</update>
+	
+	
+	<!-- 검색 -->
+	<sql id="search">
+		<if test="searchType == 't'.toString()">AND QTITLE LIKE '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'w'.toString()">AND MUSERNAME LIKE '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'tw'.toString()">AND (MUSERNAME LIKE '%' || #{keyword} || '%') or (MUSERNAME LIKE '%' || #{keyword} || '%')</if>
+	</sql>
+	
+	
+</mapper>

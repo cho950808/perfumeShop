@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shopMapper">
+    
+
+	<!-- 전체 상품 리스트 -->
+	<select id="list" resultType="com.perfume.vo.ProductViewVO">
+	SELECT
+	    P.PNUM, P.PNAME, P.PCATECODE, C.PCATECODEREF, C.PCATENAME,
+	    PPRICE, PSTOCK, PDETAIL, PDATE, P.PIMG, P.PTHUMBIMG
+	        FROM PRODUCT P
+	            INNER JOIN PRODUCT_CATEGORY C
+	                ON P.PCATECODE = C.PCATECODE
+	                ORDER BY P.PNUM DESC
+	</select>
+	
+	<!-- 상품 소감(댓글) 작성 -->
+	<insert id="registReply">
+		INSERT INTO PRODUCT_REPLY (PNUM, MUSERID, PRNUM, PRCON)
+	   		VALUES (#{pNum}, #{mUserId}, PRODUCT_REPLY_SEQ.NEXTVAL, #{prCon})
+	</insert>
+	
+	<!-- 상품 소감(댓글) 리스트 -->
+	<select id="replyList" resultType="com.perfume.vo.ReplyListVO">
+		SELECT
+		    R.PNUM, R.MUSERID, R.PRNUM, R.PRCON, R.PRDATE, M.MUSERNAME
+		FROM PRODUCT_REPLY R
+		    INNER JOIN MEMBER M
+		        ON R.MUSERID = M.MUSERID
+		    WHERE PNUM = #{pNum}
+	</select>
+	
+	<!-- 상품 소감(댓글) 삭제 -->
+	<delete id="deleteReply">
+		DELETE PRODUCT_REPLY
+	   		WHERE PRNUM = #{prNum}
+	       		AND MUSERID = #{mUserId}
+	</delete>
+	
+	<!-- 아이디 체크 -->
+	<select id="replyUserIdCheck" resultType="String">
+		SELECT MUSERID
+			FROM PRODUCT_REPLY
+	   			WHERE PRNUM = #{prNum}
+	</select>
+
+	<!-- 상품 소감(댓글) 수정 -->
+	<update id="modifyReply">
+		UPDATE PRODUCT_REPLY
+		    SET
+		        PRCON = #{prCon}
+		    WHERE PRNUM = #{prNum}
+		        AND MUSERID = #{mUserId}
+	</update>
+	
+	<!-- 카트 담기 -->
+	<insert id="addCart">
+		INSERT INTO CART (CARTNUM, MUSERID, PNUM, CARTSTOCK)
+	   		VALUES (CART_SEQ.NEXTVAL, #{mUserId}, #{pNum}, #{cartStock})
+	</insert>
+	
+	<!-- 카트 리스트 -->
+	<select id="cartList" resultType="com.perfume.vo.CartListVO">
+		SELECT
+		    ROW_NUMBER() OVER(ORDER BY C.CARTNUM DESC) AS NUM,
+		    C.CARTNUM, C.MUSERID, C.PNUM, C.CARTSTOCK, C.ADDDATE,
+		    P.PNAME, P.PPRICE, P.PTHUMBIMG
+		FROM CART C
+		    INNER JOIN PRODUCT P
+		        ON C.PNUM = P.PNUM    
+		    WHERE C.MUSERID = #{mUserId}
+	</select>
+	
+	<!-- 카트 삭제 -->
+	<delete id="deleteCart">
+		DELETE CART
+		    WHERE CARTNUM = #{cartNum}
+		        AND MUSERID = #{mUserId}
+	</delete>
+	
+	<!-- 주문 정보 -->
+	<insert id="orderInfo">
+		INSERT INTO PRODUCT_ORDER(ORDERID, MUSERID, ORDERREC, USERADDR1, USERADDR2, USERADDR3, ORDERPHON, AMOUNT)
+	    	VALUES(#{orderId}, #{mUserId}, #{orderRec}, #{userAddr1}, #{userAddr2}, #{userAddr3}, #{orderPhon}, #{amount})
+	</insert>
+	    
+	<!-- 주문 상세 정보 -->  
+	<insert id="orderInfo_Details">
+		INSERT INTO ORDER_DETAILS(ORDERDETAILSNUM, ORDERID, PNUM, CARTSTOCK)
+		    SELECT ORDER_DETAILS_SEQ.NEXTVAL, #{orderId}, PNUM, CARTSTOCK
+		        FROM CART    
+	</insert>    
+		    
+	<!-- 카트 비우기 -->
+	<delete id="cartAllDelete">
+		DELETE CART
+		    WHERE MUSERID = #{mUserId}
+	</delete>
+	
+	<!-- 특정 유저의 주문 목록 -->
+	<select id="orderList" resultType="com.perfume.vo.OrderVO">
+		SELECT 
+		    ORDERID, MUSERID, ORDERREC,
+		    USERADDR1, USERADDR2, USERADDR3,
+		    ORDERPHON, AMOUNT, ORDERDATE, DELIVERY
+		FROM PRODUCT_ORDER  
+		    WHERE MUSERID = #{mUserId}
+		    ORDER BY ORDERDATE DESC
+	</select>
+	
+	<!-- 특정 주문 목록 -->
+	<select id="orderView" resultType="com.perfume.vo.OrderListVO">
+		SELECT 
+		    O.ORDERID, O.MUSERID, O.ORDERREC,
+		    O.USERADDR1, O.USERADDR2, O.USERADDR3,
+		    O.ORDERPHON, O.AMOUNT, O.ORDERDATE, O.DELIVERY,
+		    D.ORDERDETAILSNUM, D.PNUM, D.CARTSTOCK,
+		    P.PNAME, P.PTHUMBIMG, P.PPRICE
+		FROM PRODUCT_ORDER O
+		        INNER JOIN ORDER_DETAILS D
+		            ON O.ORDERID = D.ORDERID
+		        INNER JOIN PRODUCT P
+		            ON D.PNUM = P.PNUM
+		    WHERE O.MUSERID = #{mUserId}
+		        AND O.ORDERID = #{orderId}
+	</select>
+	
+	<!-- 주문 목록 총 갯수 -->
+	<select id="orderListCount" resultType="int">
+ 		SELECT COUNT(MUSERID) 
+ 			FROM 
+ 				PRODUCT_ORDER 
+ 			WHERE MUSERID = #{mUserId}
+	</select>
+	
+	
+</mapper>

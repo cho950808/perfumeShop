@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="noticeMapper">
+
+	<!-- Notice 리스트 조회 -->
+	<select id="noticeList" resultType="com.perfume.vo.NoticeViewVO">
+		SELECT 
+			   NNUM
+			 , NTITLE
+			 , NCONTENT
+			 , NDATE
+			 , NVIEWCNT
+			 , MUSERNAME
+			 , NPIN
+		FROM 
+			 	TB_NOTICE
+		ORDER BY NPIN DESC, NDATE DESC
+	</select>
+	
+	<!-- Notice 작성 -->
+	<insert id="noticeWrite" parameterType="com.perfume.vo.NoticeViewVO">
+		INSERT INTO 
+					TB_NOTICE(
+						NNUM
+					  , NTITLE
+					  , NCONTENT
+					  , NDATE
+					  , NVIEWCNT
+					  , MUSERNAME
+					  , NPIN
+					  )
+				VALUES(
+						TB_NOTICE_SEQ.NEXTVAL
+					   , #{nTitle}
+					   , #{nContent}
+					   , SYSDATE
+					   , 0
+					   , #{mUserName}
+					   , #{nPin}
+					   )
+	</insert>
+	
+	<!-- NOTICE 상세 페이지 -->
+	<select id="noticeDetail" parameterType="int" resultType="com.perfume.vo.NoticeViewVO">
+		SELECT  
+				  NNUM
+	 			, NTITLE
+	  			, NCONTENT
+	  			, NDATE
+	  			, NVIEWCNT
+	  			, MUSERNAME
+	  			, NPIN
+		FROM 
+			  TB_NOTICE
+		WHERE 
+			  NNUM = #{nNum}
+	</select>
+	
+	
+	<!-- NOTICE 수정 -->
+	<update id="noticeModify" parameterType="com.perfume.vo.NoticeViewVO">
+		UPDATE  
+				TB_NOTICE
+		SET 
+				MUSERNAME = #{mUserName}
+			  , NTITLE = #{nTitle}
+			  , NCONTENT = #{nContent}
+			  , NPIN = #{nPin}
+		WHERE 
+				NNUM = #{nNum}
+	</update>
+	
+	<!-- NOTICE 삭제 -->
+	<delete id="noticeDelete" parameterType="int">
+		DELETE 
+		FROM 
+				TB_NOTICE
+		WHERE 
+				NNUM = #{nNum}
+	</delete>
+	
+	<!-- 총 게시글 개수 출력 -->
+	<select id="countNotice" resultType="int">
+		SELECT COUNT(*)
+		FROM TB_NOTICE
+	</select>
+	
+	<!-- 페이징 처리 후 게시글 조회 -->
+	<select id="selectNotice" resultType="com.perfume.vo.NoticeViewVO">
+		SELECT *
+		FROM (
+				SELECT
+						ROWNUM RN, A.*
+				FROM  (
+						SELECT 
+								*
+						FROM 	TB_NOTICE
+						ORDER BY NPIN DESC, NDATE DESC
+					  ) A
+			  )
+		WHERE RN BETWEEN #{start} AND #{end}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="viewCnt" parameterType="int">
+		UPDATE 	TB_NOTICE
+		SET 	NVIEWCNT = NVIEWCNT + 1
+		WHERE 	NNUM = #{nNum}
+	</update>
+	
+	<!-- 선택 삭제 -->
+	<delete id="chkDelete" parameterType="String">
+		DELETE 
+		FROM 
+				TB_NOTICE
+		WHERE 
+				NNUM = #{nNum}
+	</delete>
+	
+</mapper>
