@@ -87,6 +87,11 @@
                         </div>
                     </div>
                 </div>
+                <br><hr>
+                <div>
+                	<canvas id="pie-chart" width="600" height="600"></canvas>
+                </div>
+                
             </main>
             <!--/Main-->
         </div>
@@ -100,6 +105,30 @@
     </div>
 </div>
 	<script src="/resources/js/main2.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+	<script type="text/javascript">
+		var member = ${memberList.totalCount};
+		var order = ${orderList.totalCount};
+		var qna = ${qnaList.totalCount};
+		var reply = ${allReplyList.totalCount};
+		
+		new Chart(document.getElementById("pie-chart"), {
+		    type: 'pie',
+		    data: {
+		      labels: ["총 회원 수", "총 주문 수", "총 문의 수", "총 댓글 수(상품)"],
+		      datasets: [{
+		        backgroundColor: ["#e46050", "#52bcdc", "#f4ab43", "#72b159"],
+		        data: [member,order,qna,reply]
+		      }]
+		    },
+		    options: {
+		    	responsive: false,
+			      title: {
+			        display: true,
+			      }
+			    }
+		});
+	</script>
 </body>
 
 </html>
