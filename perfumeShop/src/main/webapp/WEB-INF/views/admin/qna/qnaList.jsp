@@ -160,17 +160,25 @@
       function deleteValue(){
          var url = "delete";    // Controller로 보내고자 하는 URL (.dh부분은 자신이 설정한 값으로 변경해야됨)
          var valueArr = new Array();
-          var list = $("input[name='check']");
-          for(var i = 0; i < list.length; i++){
+         var list = $("input[name='check']");
+          
+         for(var i = 0; i < list.length; i++){
               if(list[i].checked){ //선택되어 있으면 배열에 값을 저장함
                   valueArr.push(list[i].value);
               }
           }
-          if (valueArr.length == 0){
-             alert("선택된 글이 없습니다.");
-          }
-          else{
-            var chk = confirm("정말 삭제하시겠습니까?");             
+          
+         if (valueArr.length == 0) {
+				alert("선택된 글이 없습니다.");
+				return false;
+			} else if (confirm("정말 삭제하시겠습니까?") == true) {
+				
+			} else {
+				alert("삭제 실패");
+				location.replace("qnaList")
+				return false;
+			}
+          
             $.ajax({
                 url : url,                    // 전송 URL
                 type : 'POST',                // GET or POST 방식
@@ -179,16 +187,15 @@
                    valueArr : valueArr        // 보내고자 하는 data 변수 설정
                 },
                    success: function(jdata){
-                       if(jdata = 1) {
+                       if (jdata = 1) {
                            alert("삭제 성공");
                            location.replace("qnaList")
-                       }
-                       else{
+                       } else{
                            alert("삭제 실패");
+                           return false;
                        }
                    }
             });
-         }
       }  
    </script>
    <script>
