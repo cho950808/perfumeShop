@@ -107,7 +107,6 @@
         <div class="container">
           <div class="cart_inner">
           
-                   <!-- 삭제 -->
                <!-- 삭제 -->
                <div class="delBtn">
                      <button type="button" class="selectDelete_btn btn_1 checkout_btn_1" style="font-family: 'Noto Serif KR', serif;">선택 삭제</button>
@@ -189,7 +188,7 @@
           </div>
           <table backgroundColor="red" border="1">
           <div class="orderInfo" align="left">
-				<form role="form" method="post" autocomplete="off">
+				<form role="form" method="post" autocomplete="off" id="regForm">
 					<input type="hidden" name="amount" value="${sum}" />
 						
 					<!-- 수령인 -->
@@ -224,7 +223,7 @@
 						</div>
 					</div>
 					<div class="inputArea" align="right">
-						<button type="submit" class="genric-btn info radius" style="font-family: 'Noto Serif KR', serif;">주문</button>
+						<button type="submit" id="order" class="genric-btn info radius" style="font-family: 'Noto Serif KR', serif;">주문</button>
 						<button type="button" class="genric-btn primary radius" id="cancel_btn" style="font-family: 'Noto Serif KR', serif;">취소</button>
 					</div>
 				</form>	
@@ -311,10 +310,13 @@
             if (checkArr.length == 0){
                 alert("선택된 상품이 없습니다.");
                 return false;
-             }
+			} else if (confirm("정말 삭제하시겠습니까?") == true) {
+				alert("선택하신 상품이 삭제되었습니다.");
+			} else {
+				alert("삭제 실패");
+				return false;
+			}
             
-            else{
-            var confirm_val = confirm("정말 삭제하시겠습니까?");
             $.ajax({
                url : "/shop/deleteCart",
                type : "post",
@@ -331,8 +333,38 @@
                   }
                }
             });
-            }
+            
       });
+   </script>
+   
+   <script type="text/javascript">
+   var checkArr = new Array();
+   
+   $(document).ready(function() {
+ 		$("#order").on("click", function() {
+ 			
+ 			var st = ['orderRec','orderPhon','zipCode','userAddr1','userAddr2'];
+ 			var st2 = ['성명','연락처','우편번호','도로명 주소','상세주소'];
+ 			
+ 			for (i = 0; i < st.length; i++) {
+ 				if ($("#"+st[i]).val() == "") {
+ 					alert(st2[i]+"를 입력해주세요");
+ 					$("#"+st[i]).focus();
+ 					return false;
+ 				}
+ 			}
+ 			
+ 		   if (checkArr.length == 0){
+ 		        alert("선택된 상품이 없습니다.");
+ 		        return false;
+ 		    }
+ 			
+ 			$("#regForm").submit();
+ 			alert("주문 완료");
+ 		});
+ 		
+ 	})
+   
    </script>
    
    <script>
