@@ -13,11 +13,6 @@
 	<link rel="stylesheet" href="/resources/css/adminStyles.css">
 	<link rel="stylesheet" href="/resources/css/adminlte.css">
 	<link rel="shortcut icon" type="image/x-icon" href="/resources/img/24.png">
-	
-	<script src="/resources/js/main2.js"></script>
-	<script src="/resources/jquery/jquery-3.3.1.min.js"></script>
-	<script src="/resources/bootstrap/bootstrap.min.js"></script>
-	<script src="/resources/ckeditor/ckeditor.js"></script>
 
 <title>Perfume Shop Admin</title>
 </head>
@@ -34,7 +29,7 @@
 			<%@ include file="../include/aside.jsp" %>
 
 			<!--Main-->
-			<main class="bg-white-500 flex-1 p-4 overflow-hidden"> <!--Grid Form-->
+			<main class="bg-white-500 flex-1 p-4 overflow-hidden"> 
 			<div
 				class="mb-2 border-solid border-gray-300 rounded border shadow-sm w-full">
 				<div
@@ -124,7 +119,6 @@
 					<br>
 				</div>
 
-				<!--/Grid Form-->
 			</div>
 			</main>
 			<!--/Main-->
@@ -136,11 +130,12 @@
 				<%@ include file="../include/footer.jsp"%>
 			</div>
 		</footer>
-		<!--/footer-->
 	</div>
-
+	<script src="/resources/js/main2.js"></script>
+	<script src="/resources/jquery/jquery-3.3.1.min.js"></script>
+	<script src="/resources/bootstrap/bootstrap.min.js"></script>
+	<script src="/resources/ckeditor/ckeditor.js"></script>
 	<script type="text/javascript">
-		//삭제 체크박스
 		$(function() {
 			var chkObj = document.getElementsByName("check");
 			var rowCnt = chkObj.length;
@@ -159,38 +154,45 @@
 				}
 			});
 		});
+		
 		function deleteValue() {
-			var url = "noticeChkDelete"; // Controller로 보내고자 하는 URL (.dh부분은 자신이 설정한 값으로 변경해야됨)
+			var url = "noticeChkDelete"; // Controller로 보내고자 하는 URL
 			var valueArr = new Array();
 			var list = $("input[name='check']");
+			
 			for (var i = 0; i < list.length; i++) {
 				if (list[i].checked) { //선택되어 있으면 배열에 값을 저장함
 					valueArr.push(list[i].value);
 				}
 			}
+			
 			if (valueArr.length == 0) {
 				alert("선택된 글이 없습니다.");
+				return;
+			} else if (confirm("정말 삭제하시겠습니까?") == true) {
+				
 			} else {
-				var chk = confirm("정말 삭제하시겠습니까?");
+				alert("삭제 실패");
+				location.replace("noticeList")
+				return false;
+			}
 				$.ajax({
 					url : url, // 전송 URL
 					type : 'POST', // GET or POST 방식
-					traditional : true,
+					traditional : true, // 배열 전송
 					data : {
-						valueArr : valueArr
-						
-					// 보내고자 하는 data 변수 설정
-					},
-					success : function(jdata) {
-						if (jdata = 1) {
-							alert("삭제 성공");
-							location.replace("noticeList")
-						} else {
-							alert("삭제 실패");
-						}
-					}
+		                   valueArr : valueArr        // 보내고자 하는 data 변수 설정
+		                },
+		                   success: function(result){
+		                	   if (result = 1) {
+			                      	alert("삭제 성공");
+			                        location.replace("noticeList")
+		                       } else {
+		                    	   alert("삭제 실패");
+			                       return false;
+		                       }
+		                   }
 				});
-			}
 		}
 
 		//표시할 글 개수 옵션
