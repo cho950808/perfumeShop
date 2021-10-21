@@ -1,3 +1,3 @@
 # perfumeShop
 
-![image](https://user-images.githubusercontent.com/92083303/138288822-242993ff-f247-488d-bb98-2ea93a8a8a71.png)
+![image](https://user-images.githubusercontent.com/92083303/138288921-5a9ede3d-730e-44a4-9a9d-eb5802828204.png)
